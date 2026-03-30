@@ -39,6 +39,10 @@ class Pipeline:
             raise FileExistsError(f"Embeddings già presenti: {out_path}")
 
         candidates = self.dataset.load_candidates(language, version)
+
+        candidates = candidates[:100]
+        print("WARNING: LIMITING canidates to 100")
+
         codes = [s.code for s in candidates]
         ids = [s.id for s in candidates]
 
@@ -69,7 +73,7 @@ class Pipeline:
         # carica query
         queries = self.dataset.load_queries(language, query_version)
         query_codes = [q.code for q in queries]
-        query_embeddings = self.model.encode_batch(query_codes)
+        query_embeddings = self.model.encode_batch(query_codes, is_query=True)
 
         scores = {}
         for query, q_emb in zip(queries, query_embeddings):
@@ -162,9 +166,6 @@ class Pipeline:
     def _precision_at_k(self, ranked: list, gt: set, k: int) -> float:
         top_k = [cid for cid, _ in ranked[:k]]
         hits = sum(1 for cid in top_k if cid in gt)
-        #print(gt)
-        #print(ranked[:(k)])
-        #print(hits)
         return hits / k if k > 0 else 0.0
 
     def _ndcg_at_k(self, ranked: list, gt: set, k: int) -> float:
@@ -179,12 +180,8 @@ class Pipeline:
 
         ideal = sum(
             1.0 / math.log2(i + 2)
-            #for i in range(min(len(gt), k))
             for i in range(len(relevant))
         )
-
-        #if ideal > 0:
-        #    print(dcg/ideal)
         
         return dcg / ideal if ideal > 0 else 0.0
 

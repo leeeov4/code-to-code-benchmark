@@ -1,6 +1,7 @@
 # benchmark/models/codebert.py
 
 import torch
+from torch import Tensor
 from transformers import AutoTokenizer, AutoModel
 
 from ..core.base_model import BaseModel
@@ -11,7 +12,7 @@ from tqdm import tqdm
 class CodeBERT(BaseModel):
 
     MODEL_ID   = "microsoft/codebert-base"
-    MODEL_NAME = "codebert" #Nome con cui si salva i risultati
+    MODEL_NAME = "codebert"
     MAX_LENGTH = 512
 
     def __init__(self, device: str = None):
@@ -21,13 +22,13 @@ class CodeBERT(BaseModel):
         self.model     = AutoModel.from_pretrained(self.MODEL_ID).to(self.device)
         self.model.eval()
 
-    def encode(self, code: str) -> torch.Tensor:
+    def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
         return self.encode_batch([code])[0]
 
-    def encode_batch(self, codes: list[str], batch_size: int = 32) -> list[torch.Tensor]:
+    def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
         embeddings = []
 
-        for i in tqdm(range(0, len(codes), batch_size)):
+        for i in range(0, len(codes), batch_size):
             batch  = codes[i:i + batch_size]
             inputs = self.tokenizer(
                 batch,

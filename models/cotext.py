@@ -1,36 +1,22 @@
-# benchmark/models/starencoder.py
+# benchmark/models/cotext.py
 
 import torch
 from transformers import AutoTokenizer, AutoModel
 
 from ..core.base_model import BaseModel
 
-from tqdm import tqdm
 
+class CoText(BaseModel):
 
-class StarEncoder(BaseModel):
-
-    MODEL_ID   = "bigcode/starencoder"
-    MODEL_NAME = "starencoder"
-    MAX_LENGTH = 1024
-
-    PAD_TOKEN  = "<pad>"
-    SEP_TOKEN  = "<sep>"
-    CLS_TOKEN  = "<cls>"
-    MASK_TOKEN = "<mask>"
+    MODEL_ID   = "razent/cotext-1-ccg"
+    MODEL_NAME = "cotext"
+    MAX_LENGTH = 512
 
     def __init__(self, device: str = None):
         super().__init__(self.MODEL_NAME, device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
-        self.tokenizer.add_special_tokens({"pad_token":  self.PAD_TOKEN})
-        self.tokenizer.add_special_tokens({"sep_token":  self.SEP_TOKEN})
-        self.tokenizer.add_special_tokens({"cls_token":  self.CLS_TOKEN})
-        self.tokenizer.add_special_tokens({"mask_token": self.MASK_TOKEN})
-
-        self.model = AutoModel.from_pretrained(self.MODEL_ID)
-        self.model.resize_token_embeddings(len(self.tokenizer))
-        self.model = self.model.to(self.device)
+        self.model     = AutoModel.from_pretrained(self.MODEL_ID).to(self.device)
         self.model.eval()
 
     def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
@@ -39,10 +25,9 @@ class StarEncoder(BaseModel):
     def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
         embeddings = []
 
-        #for i in tqdm(range(0, len(codes), batch_size)):
         for i in range(0, len(codes), batch_size):
             batch  = codes[i:i + batch_size]
-            inputs = self.tokenizer(
+            inputs = self.tokenizer.batch_encode_plus(
                 batch,
                 return_tensors="pt",
                 padding=True,
@@ -52,7 +37,7 @@ class StarEncoder(BaseModel):
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             with torch.inference_mode():
-                outputs = self.model(**inputs)
+                outputs = self.model.encoder(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"])
 
             batch_embeddings = self._mean_pool(
                 outputs.last_hidden_state, inputs["attention_mask"]

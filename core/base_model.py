@@ -11,11 +11,11 @@ class BaseModel(ABC):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
     @abstractmethod
-    def encode(self, code: str) -> torch.Tensor:
+    def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
         """Encode a single code snippet and return its embedding as a CPU tensor."""
 
     @abstractmethod
-    def encode_batch(self, codes: list[str], batch_size: int = 32) -> list[torch.Tensor]:
+    def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
         """Encode a list of code snippets and return their embeddings as CPU tensors."""
 
     def __str__(self) -> str:

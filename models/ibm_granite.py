@@ -1,42 +1,44 @@
-# benchmark/models/starencoder.py
+# benchmark/models/ibm_granite.py
 
 import torch
-from transformers import AutoTokenizer, AutoModel
 
+from transformers import AutoTokenizer, AutoModel
 from ..core.base_model import BaseModel
 
 from tqdm import tqdm
 
 
-class StarEncoder(BaseModel):
+class IBMGranite(BaseModel):
 
-    MODEL_ID   = "bigcode/starencoder"
-    MODEL_NAME = "starencoder"
-    MAX_LENGTH = 1024
+    MAX_LENGTH_MAP = {
+        "3b": 2048,
+        "8b": 4096
+    }
 
-    PAD_TOKEN  = "<pad>"
-    SEP_TOKEN  = "<sep>"
-    CLS_TOKEN  = "<cls>"
-    MASK_TOKEN = "<mask>"
+    MODEL_MAP = {
+        "3b": ("ibm-granite/granite-3b-code-base-2k",  "ibm_granite_3b"),
+        "8b": ("ibm-granite/granite-8b-code-base-4k", "ibm_granite_8b")
+    }
 
-    def __init__(self, device: str = None):
+    def __init__(self, variant: str = "base", device: str = None):
+        if variant not in self.MODEL_MAP:
+            raise ValueError(f"Unsupported variant: {variant}")
+
+        self.MODEL_ID, self.MODEL_NAME = self.MODEL_MAP[variant]
+
+        self.MAX_LENGTH = self.MAX_LENGTH_MAP[variant]
+
         super().__init__(self.MODEL_NAME, device)
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
-        self.tokenizer.add_special_tokens({"pad_token":  self.PAD_TOKEN})
-        self.tokenizer.add_special_tokens({"sep_token":  self.SEP_TOKEN})
-        self.tokenizer.add_special_tokens({"cls_token":  self.CLS_TOKEN})
-        self.tokenizer.add_special_tokens({"mask_token": self.MASK_TOKEN})
-
-        self.model = AutoModel.from_pretrained(self.MODEL_ID)
-        self.model.resize_token_embeddings(len(self.tokenizer))
-        self.model = self.model.to(self.device)
+        self.model     = AutoModel.from_pretrained(self.MODEL_ID).to(self.device)
         self.model.eval()
+
 
     def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
         return self.encode_batch([code])[0]
 
-    def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
+    def encode_batch(self, codes: list[str], batch_size: int = 8, is_query: bool = False) -> list[torch.Tensor]:
         embeddings = []
 
         #for i in tqdm(range(0, len(codes), batch_size)):

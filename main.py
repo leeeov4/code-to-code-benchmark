@@ -13,7 +13,24 @@ from .pipeline.pipeline import Pipeline
 from .models.starencoder import StarEncoder
 from .models.codebert import CodeBERT
 from .models.codet5 import CodeT5
+from .models.codellama import Codellama
+from .models.coderank import CodeRank
+from .models.codesage import CodeSage
+from .models.codex import Codex
+from .models.codex_2b import Codex2B
+from .models.cotext import CoText
+from .models.ibm_granite import IBMGranite
+from .models.nomic_embed import NomicEmbed
+from .models.graphcodebert import GraphCodeBERT
+from .models.plbart import PlBART
+from .models.qwen3_coder import Qwen3Coder
+from .models.qwen3_emb import Qwen3Embedding
+from .models.sptcode import SPTCode
+from .models.unixcoder_wrapper import UniXcoderWrapper
+from .models.codet5p import CodeT5P
+from .models.codet5p_220m import CodeT5P220M
 
+from .analysis.embedding_time import EmbeddingTimeAnalysis
 
 # ------------------------------------------------------------------ #
 #  Registry                                                            #
@@ -27,16 +44,69 @@ def build_dataset(args) -> BaseDataset:
     raise ValueError(f"Dataset sconosciuto: {args.dataset}")
 
 
-
 def build_model(args):
     if args.model == "starencoder":
         return StarEncoder()
+    if args.model == "unixcoder":
+        return UniXcoderWrapper()
     elif args.model == "codebert":
         return CodeBERT()
     elif args.model == "codet5":
         return CodeT5()
     elif args.model == "codet5_large":
         return CodeT5("large")
+    elif args.model == "codellama":
+        return Codellama()
+    elif args.model == "coderank":
+        return CodeRank()
+    elif args.model == "codesage":
+        return CodeSage()
+    elif args.model == "codesage_large":
+        return CodeSage("large")
+    elif args.model == "codex":
+        return Codex()
+    elif args.model == "codex_2b":
+        return Codex2B()
+    elif args.model == "cotext":
+        return CoText()
+    elif args.model == "cotext":
+        return CoText()
+    elif args.model == "graphcodebert":
+        return GraphCodeBERT()
+    elif args.model == "ibm_granite_3b":
+        return IBMGranite("3b")
+    elif args.model == "ibm_granite_8b":
+        return IBMGranite("8b")
+    elif args.model == "nomic_embed":
+        return NomicEmbed()
+    elif args.model == "plbart":
+        return PlBART()
+    elif args.model == "sptcode":
+        return SPTCode()
+    elif args.model == "qwen3_coder":
+        return Qwen3Coder()
+    elif args.model == "qwen3_emb_600m":
+        return Qwen3Embedding("600m")
+    elif args.model == "qwen3_emb_8b":
+        return Qwen3Embedding("8b")
+    elif args.model == "codet5p":
+        return CodeT5P()
+    elif args.model == "codet5p_220m":
+        return CodeT5P220M()
+    
+    
+    
+    
+    
+    
+        
+
+
+    
+        
+
+    
+    
 
     # aggiungere qui i modelli man mano
     raise NotImplementedError(f"Modello non registrato: {args.model}")
@@ -133,12 +203,12 @@ def parse_args():
 
     parser.add_argument(
         "--dataset",
-        required=True,
+        required=False,
         choices=["codenet", "multiple", "xcodeeval", "bigclonebench"]
     )
     parser.add_argument(
         "--stage",
-        required=True,
+        required=False,
         choices=["setup", "transform", "embeddings", "retrieval", "metrics", "all"]
     )
     parser.add_argument(
@@ -180,8 +250,24 @@ def parse_args():
         default=None,
         help="Se specificato, salva solo i top-k candidati per ogni query."
     )
+    parser.add_argument(
+        "--analysis",
+        choices=["timing"],
+        required=False
+    )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.analysis is None:
+        if args.dataset is None:
+            parser.error("--dataset è obbligatorio se non si usa --analysis.")
+        if args.stage is None:
+            parser.error("--stage è obbligatorio se non si usa --analysis.")
+        if args.stage not in ("setup", "transform") and args.model is None:
+            parser.error("--model è obbligatorio per gli stage embeddings, retrieval, metrics.")
+        if args.dataset == "bigclonebench" and args.clone_type is None:
+            parser.error("--clone_type è obbligatorio per bigclonebench.")
+
+    return args
 
 
 # ------------------------------------------------------------------ #
@@ -190,6 +276,17 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    if args.analysis == "timing":
+        model    = build_model(args)
+        analysis = EmbeddingTimeAnalysis(model)
+        analysis.run(device=model.device)
+        return
+    
+    if args.dataset is None:
+        raise ValueError("--dataset è obbligatorio.")
+    if args.stage is None:
+        raise ValueError("--stage è obbligatorio.")
 
     dataset = build_dataset(args)
 

@@ -1,16 +1,19 @@
-# benchmark/models/codet5.py
+# benchmark/models/qwen3_emb.py
 
 import torch
 
-from transformers import RobertaTokenizer, T5EncoderModel
+from transformers import AutoTokenizer, AutoModel
 from ..core.base_model import BaseModel
 
-class CodeT5(BaseModel):
+from tqdm import tqdm
 
-    MAX_LENGTH = 512
+
+class Qwen3Embedding(BaseModel):
+
+    MAX_LENGTH = 32768
     MODEL_MAP = {
-        "base":  ("Salesforce/codet5-base",  "codet5_base"),
-        "large": ("Salesforce/codet5-large", "codet5_large"),
+        "600m": ("Qwen/Qwen3-Embedding-0.6B",  "qwen3_emb_600"),
+        "8b": ("Qwen/Qwen3-Embedding-8B", "qwen3_emb_8b")
     }
 
     def __init__(self, variant: str = "base", device: str = None):
@@ -21,8 +24,8 @@ class CodeT5(BaseModel):
 
         super().__init__(self.MODEL_NAME, device)
 
-        self.tokenizer = RobertaTokenizer.from_pretrained(self.MODEL_ID)
-        self.model     = T5EncoderModel.from_pretrained(self.MODEL_ID).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID, padding_side='left')
+        self.model     = AutoModel.from_pretrained(self.MODEL_ID).to(self.device)
         self.model.eval()
 
 
@@ -44,18 +47,21 @@ class CodeT5(BaseModel):
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             with torch.inference_mode():
-                outputs = self.model.encoder(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"])
+                outputs = self.model(**inputs)
 
-            batch_embeddings = self._mean_pool(
+            batch_embeddings = self.last_token_pool(
                 outputs.last_hidden_state, inputs["attention_mask"]
             )
             embeddings.extend(batch_embeddings.cpu())
 
         return embeddings
 
-    def _mean_pool(self, last_hidden_state: torch.Tensor,
-                   attention_mask: torch.Tensor) -> torch.Tensor:
-        last_hidden = last_hidden_state.masked_fill(
-            ~attention_mask[..., None].bool(), 0.0
-        )
-        return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
+    def last_token_pool(self, last_hidden_states: torch.Tensor,
+                    attention_mask: torch.Tensor) -> torch.Tensor:
+        left_padding = (attention_mask[:, -1].sum() == attention_mask.shape[0])
+        if left_padding:
+            return last_hidden_states[:, -1]
+        else:
+            sequence_lengths = attention_mask.sum(dim=1) - 1
+            batch_size = last_hidden_states.shape[0]
+            return last_hidden_states[torch.arange(batch_size, device=last_hidden_states.device), sequence_lengths]

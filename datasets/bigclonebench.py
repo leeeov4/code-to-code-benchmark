@@ -20,7 +20,7 @@ class BigCloneBench(BaseDataset):
     MAX_K = 50
     K_VALUES = [1, 10, 20, 50]
 
-    def __init__(self, clone_type: str):  # solo clone_type, niente path
+    def __init__(self, clone_type: str):
         super().__init__()
         if clone_type not in self.CLONE_TYPES:
             raise ValueError(f"clone_type deve essere uno tra {self.CLONE_TYPES}")
@@ -197,9 +197,6 @@ class BigCloneBench(BaseDataset):
         return result
 
     def get_functions_by_type_count(self, clone_type,min_sim,max_sim, cursor, limit=None):
-
-        limit = 10
-
         query = "select f2.NAME, f2.TYPE, f2.STARTLINE, f2.ENDLINE, f2.ID from (SELECT DISTINCT f.ID FROM FUNCTIONS AS f JOIN CLONES AS c ON f.ID = c.FUNCTION_ID_ONE   WHERE  c.SYNTACTIC_TYPE =  {0} and c.SIMILARITY_LINE >= {1} and c.SIMILARITY_LINE <= {2}) as f1 join Functions as f2 ON f1.ID = f2.ID".format(clone_type,min_sim,max_sim)
 
         if limit:

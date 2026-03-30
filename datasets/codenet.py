@@ -42,22 +42,6 @@ class CodeNet(ProblemDataset):
 
         return snippets
 
-    def load_ids(self, path):
-        ids = set()
-        with open(path, "r") as f:
-            for line in f:
-                line = line.strip().rstrip(";")
-                parts = line.split("/")
-                
-                folder = parts[-2]                    # p02791
-                filename = parts[-1]                  # s734662923.java
-                file_id = filename.split(".")[0]      # s734662923
-                
-                full_id = f"{folder}/{file_id}"
-                ids.add(full_id)
-        return ids
-
-
     def filter_candidates(self, candidates, ids):
         return [c for c in candidates if c.id in ids]
 
