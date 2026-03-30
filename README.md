@@ -255,3 +255,31 @@ $BENCHMARK_DATA_DIR/output/codenet/
 | CodexEmbed 400M | `codex` | [Link](https://huggingface.co/Salesforce/SFR-Embedding-Code-400M_R) |
 | CodexEmbed 2B | `codex_2b` | [Link](https://huggingface.co/Salesforce/SFR-Embedding-Code-2B_R) |
 | ... | ... | ... |
+
+
+### 1. Generate Rewritten Versions (run once per language)
+
+**Note:** vLLM conflicts with several dependencies used in the main benchmark environment. We recommend running this step in a separate virtual environment.
+```bash
+# create and activate a dedicated environment
+python -m venv venv_rewriting
+source venv_rewriting/bin/activate
+```
+
+Install PyTorch following the official instructions for your system configuration:
+https://pytorch.org/get-started/locally/
+
+Then install the remaining dependencies:
+```bash
+pip install transformers vllm
+
+# run the transformation script
+python -m benchmark.scripts.transform --language py
+python -m benchmark.scripts.transform --language java
+python -m benchmark.scripts.transform --language cpp
+
+# deactivate when done
+deactivate
+```
+
+Once the rewritten versions are generated and saved to disk, switch back to the main environment for all subsequent steps (embeddings, retrieval, metrics).
