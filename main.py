@@ -93,23 +93,8 @@ def build_model(args):
         return CodeT5P()
     elif args.model == "codet5p_220m":
         return CodeT5P220M()
-    
-    
-    
-    
-    
-    
-        
 
-
-    
-        
-
-    
-    
-
-    # aggiungere qui i modelli man mano
-    raise NotImplementedError(f"Modello non registrato: {args.model}")
+    raise NotImplementedError(f"Model not registered: {args.model}")
 
 
 # ------------------------------------------------------------------ #
@@ -119,21 +104,20 @@ def build_model(args):
 def run_setup(dataset: BaseDataset, args):
     if isinstance(dataset, BigCloneBench):
         dataset.extract_and_serialize()
-        print("[Setup] Estrazione BigCloneBench completata.")
+        print("[Setup] BigCloneBench extraction completed.")
     else:
         for lang in _resolve_languages(dataset, args):
             dataset.select_queries(lang, seed=SEED)
-            print(f"[Setup] Query selezionate per {lang}.")
-
-
+            print(f"[Setup] Queries selected for {lang}.")
+            
 def run_transform(dataset: BaseDataset, args):
     from .transformers.transformer_factory import build_transformer
     if args.version is None:
-        raise ValueError("--version è obbligatorio per lo stage transform.")
+        raise ValueError("--version is mandatory for code rewriting.")
     transformer = build_transformer(args.version)
     for lang in _resolve_languages(dataset, args):
         dataset.transform_and_serialize(lang, args.version, transformer)
-        print(f"[Transform] Versione {args.version} generata per {lang}.")
+        print(f"[Transform] Version {args.version} generated for {lang}.")
 
 
 def run_embeddings(dataset: BaseDataset, pipeline: Pipeline, args):
@@ -169,23 +153,23 @@ VERSIONS = ["original", "LLM", "R1", "R2", "R3"]
 
 
 def _resolve_languages(dataset: BaseDataset, args) -> list[str]:
-    """Restituisce il singolo linguaggio richiesto o tutti quelli supportati."""
+    """Returns the requested single language or all supported languages."""
     if args.language:
         if args.language not in dataset.supported_languages():
             raise ValueError(
-                f"{args.language} non supportato da {dataset.__class__.__name__}. "
-                f"Supportati: {dataset.supported_languages()}"
+                f"{args.language} is not supported by {dataset.__class__.__name__}. "
+                f"Supported: {dataset.supported_languages()}"
             )
         return [args.language]
     return dataset.supported_languages()
 
 
 def _resolve_versions(version_arg: str) -> list[str]:
-    """'all' espande a tutte le versioni, altrimenti restituisce la versione richiesta."""
+    """'all' expands to all versions; otherwise, returns the requested version."""
     if version_arg == "all":
         return VERSIONS
     if version_arg not in VERSIONS:
-        raise ValueError(f"Versione sconosciuta: {version_arg}. Disponibili: {VERSIONS}")
+        raise ValueError(f"Unknown version: {version_arg}. Available: {VERSIONS}")
     return [version_arg]
 
 
@@ -213,42 +197,42 @@ def parse_args():
     )
     parser.add_argument(
         "--model",
-        required=False  # non obbligatorio per setup e transform
+        required=False
     )
     parser.add_argument(
         "--language",
         required=False,
-        help="Se omesso, esegue su tutti i linguaggi supportati dal dataset."
+        help="If omitted, runs on all languages supported by the dataset."
     )
     parser.add_argument(
         "--version",
         required=False,
-        help="Versione del codice (original, LLM, R1, R2, R3). Usato per embeddings e transform."
+        help="Code version (original, LLM, R1, R2, R3). Used for embeddings and transformation."
     )
     parser.add_argument(
         "--query_version",
         default="original",
         choices=VERSIONS + ["all"],
-        help="Versione delle query per retrieval e metrics."
+        help="Query version for retrieval and metrics."
     )
     parser.add_argument(
         "--candidate_version",
         default="original",
         choices=VERSIONS + ["all"],
-        help="Versione dei candidati per retrieval e metrics."
+        help="Candidate version for retrieval and metrics."
     )
     parser.add_argument(
         "--clone_type",
         required=False,
         choices=["type1", "type2", "type3"],
-        help="Obbligatorio per bigclonebench."
+        help="Required for BigCloneBench."
     )
     parser.add_argument(
         "--top_k",
         type=int,
         required=False,
         default=None,
-        help="Se specificato, salva solo i top-k candidati per ogni query."
+        help="If specified, saves only the top-k candidates for each query."
     )
     parser.add_argument(
         "--analysis",
@@ -259,13 +243,13 @@ def parse_args():
     args = parser.parse_args()
     if args.analysis is None:
         if args.dataset is None:
-            parser.error("--dataset è obbligatorio se non si usa --analysis.")
+            parser.error("--dataset is required unless --analysis is used.")
         if args.stage is None:
-            parser.error("--stage è obbligatorio se non si usa --analysis.")
+            parser.error("--stage is required unless --analysis is used.")
         if args.stage not in ("setup", "transform") and args.model is None:
-            parser.error("--model è obbligatorio per gli stage embeddings, retrieval, metrics.")
+            parser.error("--model is required for the embeddings, retrieval, and metrics stages.")
         if args.dataset == "bigclonebench" and args.clone_type is None:
-            parser.error("--clone_type è obbligatorio per bigclonebench.")
+            parser.error("--clone_type is required for BigCloneBench.")
 
     return args
 
@@ -284,13 +268,13 @@ def main():
         return
     
     if args.dataset is None:
-        raise ValueError("--dataset è obbligatorio.")
+        raise ValueError("--dataset is required.")
     if args.stage is None:
-        raise ValueError("--stage è obbligatorio.")
+        raise ValueError("--stage is required.")
 
     dataset = build_dataset(args)
 
-    # setup e transform non richiedono un modello
+    # setup and transform do not require a model
     if args.stage == "setup":
         run_setup(dataset, args)
         return
@@ -299,7 +283,7 @@ def main():
         run_transform(dataset, args)
         return
 
-    # tutti gli altri stage richiedono un modello
+    # All other stages require a model
     if args.model is None:
         raise ValueError("--model è obbligatorio per gli stage embeddings, retrieval, metrics.")
 

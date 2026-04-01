@@ -28,8 +28,7 @@ class MultiPLE(ProblemDataset):
         df = self._load_dataframe(language)
         for problem_index in range(0,len(df["problem"])):
             #Consider only problems with at least one correct solution
-            #if "OK" in df["statuses"][problem_index]:
-            if sum(s == "OK" for s in df["statuses"][problem_index]) >= 2:
+            if "OK" in df["statuses"][problem_index]:
                 for fun_index in range(0,len(df["completions"][problem_index])):
                     #Could be the query
                     candidates.append(self._to_snippet(df["completions"][problem_index][fun_index], problem_index, fun_index, language))
@@ -60,9 +59,8 @@ class MultiPLE(ProblemDataset):
 
         df = self._load_dataframe(language)
         for problem_index in range(0,len(df["problem"])):
-            #Consider only problems with at least one/two? correct solution
-            #if "OK" in df["statuses"][problem_index]:
-            if sum(s == "OK" for s in df["statuses"][problem_index]) >= 2:
+            #Consider only problems with at least one correct solution
+            if "OK" in df["statuses"][problem_index]:
                 found = False
                 while not found:
                     fun_index = random.randint(0, len(df["completions"][problem_index])-1)
@@ -72,7 +70,6 @@ class MultiPLE(ProblemDataset):
                 queries.append(self._to_snippet(df["completions"][problem_index][fun_index], problem_index, fun_index, language))
         return queries
 
-    #TODO: trasforma in get ground_truths
     def get_ground_truth(self, query_id: str, language: str) -> list[str]:
         problem_id = query_id.split("/")[0]
         candidates = self._load_original_candidates(language)
@@ -83,7 +80,6 @@ class MultiPLE(ProblemDataset):
             and df["statuses"][int(s.id.split("/")[0])][int(s.id.split("/")[1])] == "OK"
             and s.id != query_id
         ]
-
 
     # ------------------------------------------------------------------ #
     #  Utility                                                             #

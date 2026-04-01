@@ -9,8 +9,6 @@ from tqdm import tqdm
 from ..core.base_dataset import BaseDataset
 from ..core.code_snippet import CodeSnippet
 
-
-
 class BigCloneBench(BaseDataset):
 
     name = "bigclonebench"
@@ -27,7 +25,7 @@ class BigCloneBench(BaseDataset):
         self.clone_type = clone_type
     
     # ------------------------------------------------------------------ #
-    #  Interfaccia                                                         #
+    #  Interface                                                         #
     # ------------------------------------------------------------------ #
 
     def supported_languages(self) -> list[str]:
@@ -71,7 +69,7 @@ class BigCloneBench(BaseDataset):
         )
 
     # ------------------------------------------------------------------ #
-    #  Estrazione SQL                                                      #
+    #  SQL Extraction                                                    #
     # ------------------------------------------------------------------ #
 
     def extract_and_serialize(self):
@@ -102,7 +100,7 @@ class BigCloneBench(BaseDataset):
             elif clone_type == "type3":
                 list_of_functions = self.get_functions_by_type_count(i, 0.5, 1,cursor)
             
-            for fun in tqdm(list_of_functions):
+            for fun in list_of_functions:
                 function_id = fun[4]
                 if function_id not in ground_truth:
                     ground_truth[function_id] = [None] * 3    
@@ -136,7 +134,7 @@ class BigCloneBench(BaseDataset):
                 clones = self.get_clones_by_function_id_type(function_id, j, cursor)
                 ground_truth[function_id][j-1] = [clone[4] for clone in clones]
 
-    # Legge codice sorgente della funzione dal database e lo restituisce
+    # Reads the function’s source code from the database and returns it.
     def read_function_source(self, fun,base_directory,clone_type):
         directory_list = os.listdir(base_directory)
         for dir in directory_list:
@@ -180,8 +178,6 @@ class BigCloneBench(BaseDataset):
                     print(f"An error occurred: {e}")
                     raise e  # Re-raise the exception for further handling
     
-
-    # Per ogni funzione ottiene i suoi cloni di un certo tipo (e quindi determinate soglie di similarity)
     def get_clones_by_function_id_type(self, fun_id, clone_type, cursor):#,min_sim,max_sim,cursor):
         min_sim = [0,0,0.5]
         max_sim = [1,1,1]

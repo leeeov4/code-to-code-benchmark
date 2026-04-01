@@ -1,6 +1,8 @@
 # benchmark/models/codex_2b.py
 
 import torch
+from transformers import AutoModel
+import torch.nn.functional as F
 
 from ..core.base_model import BaseModel
 
@@ -14,18 +16,16 @@ class Codex2B(BaseModel):
     def __init__(self, device: str = None):
         super().__init__(self.MODEL_NAME, device)
 
-        from transformers import AutoModel
-        self.model = AutoModel.from_pretrained(
-            self.MODEL_ID, trust_remote_code=True
-        ).to(self.device)
+        self.model = AutoModel.from_pretrained(self.MODEL_ID, trust_remote_code=True, device_map="auto", low_cpu_mem_usage=True)
+        #.to(self.device)
         self.model.eval()
 
     def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
         return self.encode_batch([code], is_query=is_query)[0]
 
-    def encode_batch(self, codes: list[str], batch_size: int = 32,
+    def encode_batch(self, codes: list[str], batch_size: int = 16,
                      is_query: bool = False) -> list[torch.Tensor]:
-        import torch.nn.functional as F
+
         embeddings = []
 
         for i in range(0, len(codes), batch_size):
@@ -49,6 +49,8 @@ class Codex2B(BaseModel):
                     )
 
             batch_embeddings = F.normalize(batch_embeddings, p=2, dim=1)
-            embeddings.extend(batch_embeddings.detach().cpu())
 
-        return embeddings
+            embeddings.append(batch_embeddings.cpu())         
+
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix

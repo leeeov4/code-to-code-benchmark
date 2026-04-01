@@ -17,14 +17,14 @@ def download_language(language: str, out_dir: Path):
     out_path = out_dir / f"{language}.parquet"
 
     if out_path.exists():
-        print(f"[MultiPL-E] {language}.parquet già presente, skip.")
+        print(f"[MultiPL-E] {language}.parquet already exists, skipping.")
         return
 
     remote = HF_BASE + HF_PATH.format(lang=language)
-    print(f"[MultiPL-E] Scarico {language}...")
+    print(f"[MultiPL-E] Downloading {language}...")
     df = pd.read_parquet(remote)
     df.to_parquet(out_path)
-    print(f"[MultiPL-E] Salvato {out_path} ({len(df)} righe).")
+    print(f"[MultiPL-E] Saved {out_path} ({len(df)} rows).")
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
         nargs="+",
         default=LANGUAGES,
         choices=LANGUAGES,
-        help="Linguaggi da scaricare (default: tutti)."
+        help="Languages to download (default: all)."
     )
     args = parser.parse_args()
 
@@ -44,7 +44,7 @@ def main():
     for lang in tqdm(args.languages, desc="Downloading MultiPL-E"):
         download_language(lang, out_dir)
 
-    print(f"[MultiPL-E] Dataset pronti in {out_dir}")
+    print(f"[MultiPL-E] Datasets ready in {out_dir}")
 
 
 if __name__ == "__main__":

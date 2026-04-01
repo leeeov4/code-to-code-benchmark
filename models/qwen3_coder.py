@@ -22,7 +22,7 @@ class Qwen3Coder(BaseModel):
     def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
         return self.encode_batch([code])[0]
 
-    def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
+    def encode_batch(self, codes: list[str], batch_size: int = 8, is_query: bool = False) -> list[torch.Tensor]:
         embeddings = []
 
         for i in range(0, len(codes), batch_size):
@@ -42,9 +42,11 @@ class Qwen3Coder(BaseModel):
             batch_embeddings = self._mean_pool(
                 outputs.last_hidden_state, inputs["attention_mask"]
             )
-            embeddings.extend(batch_embeddings.cpu())
 
-        return embeddings
+            embeddings.append(batch_embeddings.cpu())         
+
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix
 
     def _mean_pool(self, last_hidden_state: torch.Tensor,
                    attention_mask: torch.Tensor) -> torch.Tensor:

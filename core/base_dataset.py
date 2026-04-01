@@ -11,7 +11,7 @@ from ..config import DATA_PATH, PROCESSED_PATH
 
 class BaseDataset(ABC):
 
-    name: str  # ogni sottoclasse lo dichiara come attributo di classe
+    name: str
 
     def __init__(self):
         self.data_path      = Path(DATA_PATH[self.name])
@@ -77,7 +77,7 @@ class BaseDataset(ABC):
         )
 
     # ------------------------------------------------------------------ #
-    #  Proprieta strutturali                                               #
+    #  Structural properties                                             #
     # ------------------------------------------------------------------ #
 
     def is_symmetric(self) -> bool:

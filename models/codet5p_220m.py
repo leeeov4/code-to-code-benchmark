@@ -28,7 +28,7 @@ class CodeT5P220M(BaseModel):
 
         for i in range(0, len(codes), batch_size):
             batch  = codes[i:i + batch_size]
-            inputs = self.tokenizer(
+            inputs = self.tokenizer.batch_encode_plus(
                 batch,
                 return_tensors="pt",
                 padding=True,
@@ -45,9 +45,11 @@ class CodeT5P220M(BaseModel):
             batch_embeddings = self._mean_pool(
                 output.last_hidden_state, inputs["attention_mask"]
             )
-            embeddings.extend(batch_embeddings.detach().cpu())
 
-        return embeddings
+            embeddings.append(batch_embeddings.cpu())         
+
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix
 
     def _mean_pool(self, last_hidden_state: torch.Tensor,
                    attention_mask: torch.Tensor) -> torch.Tensor:

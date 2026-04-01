@@ -25,5 +25,4 @@ PROCESSED_PATH = {
 
 OUTPUT_PATH =  BASE_DIR / "output"
 
-BCB_DB_PATH = "/path/to/bigclonebench.db"
 SEED        = 442

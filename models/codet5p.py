@@ -5,6 +5,7 @@ from transformers import AutoTokenizer, AutoModel, AutoConfig
 
 from ..core.base_model import BaseModel
 
+from tqdm import tqdm
 
 class CodeT5P(BaseModel):
 
@@ -35,17 +36,19 @@ class CodeT5P(BaseModel):
         for i in range(0, len(codes), batch_size):
             batch = codes[i:i + batch_size]
 
-            for code in batch:
-                inputs = self.tokenizer.encode(
-                    code,
-                    return_tensors="pt",
-                    truncation=True,
-                    max_length=self.MAX_LENGTH
-                ).to(self.device)
+            inputs = self.tokenizer.batch_encode_plus(
+                batch,
+                return_tensors="pt",
+                truncation=True,
+                padding=True,
+                max_length=self.MAX_LENGTH
+            )
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-                with torch.inference_mode():
-                    embedding = self.model(inputs)[0]
+            with torch.inference_mode():
+                batch_embeddings = self.model(**inputs)
 
-                embeddings.append(embedding.unsqueeze(0).detach().cpu().squeeze(0))
+            embeddings.append(batch_embeddings.cpu())
 
-        return embeddings
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix

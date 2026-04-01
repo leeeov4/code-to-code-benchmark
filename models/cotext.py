@@ -42,9 +42,12 @@ class CoText(BaseModel):
             batch_embeddings = self._mean_pool(
                 outputs.last_hidden_state, inputs["attention_mask"]
             )
-            embeddings.extend(batch_embeddings.cpu())
+            
+            embeddings.append(batch_embeddings.cpu())         
 
-        return embeddings
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix
+
 
     def _mean_pool(self, last_hidden_state: torch.Tensor,
                    attention_mask: torch.Tensor) -> torch.Tensor:

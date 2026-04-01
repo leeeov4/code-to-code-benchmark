@@ -22,7 +22,7 @@ def main():
     parser.add_argument(
         "--keep_clone",
         action="store_true",
-        help="Non rimuovere la directory clonata dopo la copia."
+        help="Do not remove the cloned directory after copying."
     )
     args = parser.parse_args()
 
@@ -31,12 +31,12 @@ def main():
     out_dir   = data_dir / "xcodeeval" / "retrieval_code_code"
 
     if out_dir.exists():
-        print(f"[xCodeEval] Dataset già presente in {out_dir}, skip.")
+        print(f"[xCodeEval] Dataset already exists in {out_dir}, skipping.")
         return
 
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    # step 1: clone senza LFS
+    # Step 1: Clone repository without LFS
     print("[xCodeEval] Clono repository senza LFS...")
     env = os.environ.copy()
     env["GIT_LFS_SKIP_SMUDGE"] = "1"
@@ -46,11 +46,11 @@ def main():
         check=True
     )
 
-    # step 2: pull solo della directory necessaria
-    print(f"[xCodeEval] Pull LFS: {LFS_INCLUDE}...")
+    # Step 2: Pull only the necessary directory via LFS
+    print(f"[xCodeEval] LFS pull: {LFS_INCLUDE}...")
     run(["git", "lfs", "pull", "--include", LFS_INCLUDE], cwd=clone_dir)
 
-    # step 3: copia nella destinazione finale
+    # Step 3: Copy to the final destination
     src = clone_dir / "retrieval_code_code"
     if not src.exists():
         raise FileNotFoundError(
@@ -58,15 +58,15 @@ def main():
             f"Verifica che il pull LFS sia andato a buon fine."
         )
 
-    print(f"[xCodeEval] Copio in {out_dir}...")
+    print(f"[xCodeEval] Copying to {out_dir}...")
     shutil.copytree(src, out_dir)
 
     # step 4: rimuovi clone
     if not args.keep_clone:
-        print(f"[xCodeEval] Rimuovo directory clone {clone_dir}...")
+        print(f"[xCodeEval] Removing cloned directory {clone_dir}...")
         shutil.rmtree(clone_dir)
 
-    print(f"[xCodeEval] Dataset pronto in {out_dir}")
+    print(f"[xCodeEval] Dataset ready in {out_dir}")
 
 
 if __name__ == "__main__":

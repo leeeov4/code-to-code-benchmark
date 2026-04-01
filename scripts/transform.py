@@ -14,9 +14,7 @@ from transformers import AutoTokenizer
 from ..datasets.codenet import CodeNet
 from ..core.code_snippet import CodeSnippet
 
-# ------------------------------------------------------------------ #
-#  Costanti                                                            #
-# ------------------------------------------------------------------ #
+
 
 LLM_MODEL_PATH = "Qwen/Qwen2.5-Coder-32B"
 MAX_MODEL_LEN = 8192
@@ -65,7 +63,7 @@ PROMPTS = {
 }
 
 # ------------------------------------------------------------------ #
-#  Regex estrazione codice                                             #
+#  Regex source code                                             #
 # ------------------------------------------------------------------ #
 
 RE_CODEBLOCK  = re.compile(
@@ -98,7 +96,7 @@ def chunks(lst, n):
 
 
 # ------------------------------------------------------------------ #
-#  Trasformazione                                                      #
+#  Transformation                                                      #
 # ------------------------------------------------------------------ #
 
 class CodeNetTransformer:
@@ -119,8 +117,7 @@ class CodeNetTransformer:
         )
         self.params = SamplingParams(
             temperature=0,
-            max_tokens=max_tokens,
-            #truncate_prompt_tokens=MAX_MODEL_LEN - max_tokens
+            max_tokens=max_tokens
         )
 
     def run(self):
@@ -130,7 +127,7 @@ class CodeNetTransformer:
             print(f"\n[Transform] {norm_type} ← {source_version}")
             self._run_version(norm_type, source_version)
 
-        print(f"\n[Transform] Completato in {time.time() - start:.2f}s")
+        print(f"\n[Transform] Completed in {time.time() - start:.2f}s")
 
     def _process(self, snippets: list[CodeSnippet], norm_type: str,
                     accept_length: bool = False, max_tokens_override: int = None) -> tuple[list[CodeSnippet], list[str]]:
@@ -139,8 +136,7 @@ class CodeNetTransformer:
         if max_tokens_override is not None:
             params = SamplingParams(
                 temperature=0,
-                max_tokens=max_tokens_override,
-                #truncate_prompt_tokens=MAX_MODEL_LEN - max_tokens_override
+                max_tokens=max_tokens_override
             )
 
         accepted_reasons = {"stop", "length"} if accept_length else {"stop"}
@@ -175,7 +171,7 @@ class CodeNetTransformer:
         queries_path = self.dataset._queries_path(self.language, norm_type)
 
         if out_path.exists():
-            print(f"[Transform] {norm_type} già presente, skip.")
+            print(f"[Transform] {norm_type} already exists, skipping.")
             return
 
         # primo tentativo
@@ -187,7 +183,7 @@ class CodeNetTransformer:
                 break
             multiplier     = config["max_tokens_multiplier"]
             accept_length  = config["accept_length"]
-            print(f"[Transform] Retry con max_tokens×{multiplier}, accept_length={accept_length} "
+            print(f"[Transform] Retry with max_tokens×{multiplier}, accept_length={accept_length} "
                 f"per {len(missing)} snippet...")
             #missing_snippets = [s for s in snippets if s.id in set(missing)]
             missing_snippets = [s for s in snippets if s.id in missing]  # missing è dict, in cerca le chiavi
@@ -201,7 +197,7 @@ class CodeNetTransformer:
         self._save_candidates(transformed, norm_type)
         self._save_missing(missing, norm_type)
         self._save_queries(transformed, norm_type)
-        print(f"[Transform] {norm_type}: {len(transformed)} ok, {len(missing)} falliti.")
+        print(f"[Transform] {norm_type}: {len(transformed)} ok, {len(missing)} failed.")
 
 
     def _build_prompt(self, code: str, norm_type: str) -> str:

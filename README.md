@@ -258,17 +258,33 @@ $BENCHMARK_DATA_DIR/output/codenet/
     └── metrics/
         └── <model_name>_<query_version>_<candidate_version>.json
 ```
- 
+
+
 
 ## Appendix: Available Models
 
-| Model Name | Identifier | HuggingFace |
-|---|---|---|
-| CodeBERT | `codebert` | [Link](https://huggingface.co/microsoft/codebert-base) |
-| StarEncoder | `starencoder` | [Link](https://huggingface.co/bigcode/starencoder) |
-| UniXcoder | `unixcoder` | [Link](https://huggingface.co/microsoft/unixcoder-base) |
-| CodeT5+ 110M | `codet5p` | [Link](https://huggingface.co/Salesforce/codet5p-110m-embedding) |
-| CodeT5+ 220M | `codet5p_220m` | [Link](https://huggingface.co/Salesforce/codet5p-220m) |
-| CodexEmbed 400M | `codex` | [Link](https://huggingface.co/Salesforce/SFR-Embedding-Code-400M_R) |
-| CodexEmbed 2B | `codex_2b` | [Link](https://huggingface.co/Salesforce/SFR-Embedding-Code-2B_R) |
-| ... | ... | ... |
+| Model | Model Name | HuggingFace |
+|-------|-----------|-------------|
+| CodeBERT | `codebert` | [microsoft/codebert-base](https://huggingface.co/microsoft/codebert-base) |
+| GraphCodeBERT | `graphcodebert` | [microsoft/graphcodebert-base](https://huggingface.co/microsoft/graphcodebert-base) |
+| UniXcoder | `unixcoder` | [microsoft/unixcoder-base](https://huggingface.co/microsoft/unixcoder-base) |
+| StarEncoder | `starencoder` | [bigcode/starencoder](https://huggingface.co/bigcode/starencoder) |
+| CodeT5+ 110M | `codet5p` | [Salesforce/codet5p-110m-embedding](https://huggingface.co/Salesforce/codet5p-110m-embedding) |
+| CodeT5+ 220M | `codet5p_220m` | [Salesforce/codet5p-220m](https://huggingface.co/Salesforce/codet5p-220m) |
+| CodeT5 Base | `codet5_base` | [Salesforce/codet5-base](https://huggingface.co/Salesforce/codet5-base) |
+| CodeT5 Large | `codet5_large` | [Salesforce/codet5-large](https://huggingface.co/Salesforce/codet5-large) |
+| SFR-Code 400M | `codex` | [Salesforce/SFR-Embedding-Code-400M_R](https://huggingface.co/Salesforce/SFR-Embedding-Code-400M_R) |
+| SFR-Code 2B | `codex_2b` | [Salesforce/SFR-Embedding-Code-2B_R](https://huggingface.co/Salesforce/SFR-Embedding-Code-2B_R) |
+| PLBart | `plbart` | [uclanlp/plbart-base](https://huggingface.co/uclanlp/plbart-base) |
+| CoText | `cotext` | [razent/cotext-1-ccg](https://huggingface.co/razent/cotext-1-ccg) |
+| SPTCode | `sptcode` | [claudios/sptcode](https://huggingface.co/claudios/sptcode) |
+| Nomic Embed Code | `nomic_embed` | [nomic-ai/nomic-embed-code](https://huggingface.co/nomic-ai/nomic-embed-code) |
+| CodeRankEmbed | `coderank` | [nomic-ai/CodeRankEmbed](https://huggingface.co/nomic-ai/CodeRankEmbed) |
+| CodeSage Base | `codesage_base` | [codesage/codesage-base-v2](https://huggingface.co/codesage/codesage-base-v2) |
+| CodeSage Large | `codesage_large` | [codesage/codesage-large-v2](https://huggingface.co/codesage/codesage-large-v2) |
+| IBM Granite 3B | `ibm_granite_3b` | [ibm-granite/granite-3b-code-base-2k](https://huggingface.co/ibm-granite/granite-3b-code-base-2k) |
+| IBM Granite 8B | `ibm_granite_8b` | [ibm-granite/granite-8b-code-base-4k](https://huggingface.co/ibm-granite/granite-8b-code-base-4k) |
+| Qwen3 Embedding 0.6B | `qwen3_emb_600` | [Qwen/Qwen3-Embedding-0.6B](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B) |
+| Qwen3 Embedding 8B | `qwen3_emb_8b` | [Qwen/Qwen3-Embedding-8B](https://huggingface.co/Qwen/Qwen3-Embedding-8B) |
+| CodeLlama 7B | `codellama` | [codellama/CodeLlama-7b-hf](https://huggingface.co/codellama/CodeLlama-7b-hf) |
+| Qwen3 Coder 30B | `qwen3_coder` | [Qwen/Qwen3-Coder-30B-A3B-Instruct](https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct) |

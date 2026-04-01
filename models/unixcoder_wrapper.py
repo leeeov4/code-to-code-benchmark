@@ -32,6 +32,7 @@ class UniXcoderWrapper(BaseModel):
             with torch.inference_mode():
                 _, batch_embeddings = self.model(torch.tensor(tokens).to(self.device))
 
-            embeddings.extend(batch_embeddings.detach().cpu())
+            embeddings.append(batch_embeddings.cpu())         
 
-        return embeddings
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix

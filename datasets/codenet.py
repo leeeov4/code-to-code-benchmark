@@ -21,7 +21,7 @@ class CodeNet(ProblemDataset):
 
 
     # ------------------------------------------------------------------ #
-    #  Interfaccia                                                         #
+    #  Interface                                                         #
     # ------------------------------------------------------------------ #
 
     def supported_languages(self) -> list[str]:

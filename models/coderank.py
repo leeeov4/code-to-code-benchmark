@@ -1,6 +1,7 @@
 # benchmark/models/coderank.py
 
 import torch
+from sentence_transformers import SentenceTransformer
 
 from ..core.base_model import BaseModel
 
@@ -14,8 +15,6 @@ class CodeRank(BaseModel):
     def __init__(self, device: str = None):
         super().__init__(self.MODEL_NAME, device)
 
-        from sentence_transformers import SentenceTransformer
-
         self.tokenizer = None
         self.model     = SentenceTransformer(self.MODEL_ID, trust_remote_code=True)
         self.model.eval()
@@ -27,6 +26,6 @@ class CodeRank(BaseModel):
         self.model.max_seq_length = self.MAX_LENGTH
 
         with torch.inference_mode():
-            embeddings = model.encode(codes, convert_to_tensor=True)
+            embeddings = self.model.encode(codes, convert_to_tensor=True, batch_size=batch_size)
 
-        return embedding.detach()
+        return embeddings.cpu()

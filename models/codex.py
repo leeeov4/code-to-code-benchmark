@@ -46,6 +46,8 @@ class Codex(BaseModel):
 
             # CLS token
             batch_embeddings = outputs.last_hidden_state[:, 0]
-            embeddings.extend(batch_embeddings.detach().cpu())
 
-        return embeddings
+            embeddings.append(batch_embeddings.cpu())         
+
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix

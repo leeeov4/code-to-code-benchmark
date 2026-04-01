@@ -39,8 +39,8 @@ class StarEncoder(BaseModel):
     def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
         embeddings = []
 
-        #for i in tqdm(range(0, len(codes), batch_size)):
-        for i in range(0, len(codes), batch_size):
+        for i in tqdm(range(0, len(codes), batch_size)):
+        #for i in range(0, len(codes), batch_size):
             batch  = codes[i:i + batch_size]
             inputs = self.tokenizer(
                 batch,
@@ -57,9 +57,11 @@ class StarEncoder(BaseModel):
             batch_embeddings = self._mean_pool(
                 outputs.last_hidden_state, inputs["attention_mask"]
             )
-            embeddings.extend(batch_embeddings.cpu())
+            
+            embeddings.append(batch_embeddings.cpu())             
 
-        return embeddings
+        embedding_matrix = torch.cat(embeddings, dim=0)
+        return embedding_matrix
 
     def _mean_pool(self, last_hidden_state: torch.Tensor,
                    attention_mask: torch.Tensor) -> torch.Tensor:

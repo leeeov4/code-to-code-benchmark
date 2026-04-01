@@ -40,17 +40,14 @@ class Pipeline:
 
         candidates = self.dataset.load_candidates(language, version)
 
-        candidates = candidates[:100]
-        print("WARNING: LIMITING canidates to 100")
-
         codes = [s.code for s in candidates]
         ids = [s.id for s in candidates]
 
         embeddings = self.model.encode_batch(codes)
-
-        result = {id_: emb for id_, emb in zip(ids, embeddings)}
+        
+        result = {"ids": ids, "embeddings": embeddings}
         self._save_pickle(result, out_path)
-        print(f"[Stage 1] Salvati {len(result)} embedding → {out_path}")
+        print(f"[Stage 1] Salvati {len(ids)} embedding → {out_path}")
 
     # ------------------------------------------------------------------ #
     #  Stage 2 — Retrieval                                                 #
@@ -63,14 +60,15 @@ class Pipeline:
         if out_path.exists():
             raise FileExistsError(f"Scores già presenti: {out_path}")
 
-        # carica embedding candidati
+        # Load candidates embedding
         candidate_embeddings = self._load_pickle(
             self._embeddings_path(language, candidate_version)
         )
-        candidate_ids = list(candidate_embeddings.keys())
-        candidate_matrix = torch.stack(list(candidate_embeddings.values()))  # [N, dim]
+        candidate_ids = candidate_embeddings["ids"]
+        
+        candidate_matrix = candidate_embeddings["embeddings"]
 
-        # carica query
+        # Load queries
         queries = self.dataset.load_queries(language, query_version)
         query_codes = [q.code for q in queries]
         query_embeddings = self.model.encode_batch(query_codes, is_query=True)
@@ -78,19 +76,14 @@ class Pipeline:
         scores = {}
         for query, q_emb in zip(queries, query_embeddings):
 
-            # candidati da escludere
+            # candidates to exclude (queries and inherited clones for bigclonebench)
             excluded = self.dataset.get_excluded_candidates(query.id, language)
             if self.dataset.is_symmetric():
                 excluded.add(query.id)
 
-                
-
-            # cosine similarity vettorizzata
-            q_tensor = q_emb.unsqueeze(0)            # [1, dim]
-            sims = F.cosine_similarity(q_tensor, candidate_matrix) # [N]
+            q_tensor = q_emb.unsqueeze(0)
+            sims = F.cosine_similarity(q_tensor, candidate_matrix)
             
-
-            # costruisci dizionario id → score escludendo i candidati esclusi
             ranked = [
                 (cid, sims[i].item())
                 for i, cid in enumerate(candidate_ids)
@@ -102,6 +95,7 @@ class Pipeline:
                 ranked = ranked[:self.top_k]
 
             scores[query.id] = ranked
+            break
 
         self._save_pickle(scores, out_path)
         print(f"[Stage 2] Salvati scores per {len(scores)} query → {out_path}")
@@ -118,24 +112,20 @@ class Pipeline:
         )
         queries = self.dataset.load_queries(language, query_version)
 
-        #TODO get_ground_truths for all queries
         ground_truths = {
             q.id: set(self.dataset.get_ground_truth(q.id, language))
             for q in tqdm(queries)
         }
-        #ground_truths = self.dataset.get_ground_truths(queries, language)
 
         k_values = self.dataset.K_VALUES
         results = {f"precision@{k}": [] for k in k_values}
         results.update({f"ndcg@{k}": [] for k in k_values})
 
         for query in tqdm(queries):
-            ranked = scores[query.id]        # [(cid, score), ...]
-            gt = ground_truths[query.id]
-
-            #print(f"\nQuery: {query.id}, Gt. len: {len(gt)}")
             
-
+            ranked = scores[query.id]
+            gt = ground_truths[query.id]
+            
             for k in k_values:
                 if len(gt) < k:          # ← skip se ground truth insufficiente
                     continue 
@@ -143,8 +133,6 @@ class Pipeline:
                 results[f"precision@{k}"].append(self._precision_at_k(ranked, gt, k))
                 results[f"ndcg@{k}"].append(self._ndcg_at_k(ranked, gt, k))
 
-        # media pi ogni metrica
-        #summary = {metric: sum(vals) / len(vals) for metric, vals in results.items()}
         summary = {}
         for k in k_values:
             n = len(results[f"precision@{k}"])
@@ -160,7 +148,7 @@ class Pipeline:
         return summary
 
     # ------------------------------------------------------------------ #
-    #  Metriche                                                            #
+    #  Metrics                                                           #
     # ------------------------------------------------------------------ #
 
     def _precision_at_k(self, ranked: list, gt: set, k: int) -> float:
