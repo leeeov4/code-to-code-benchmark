@@ -3,7 +3,9 @@
 import argparse
 import itertools
 
-from .config import BCB_DB_PATH, SEED, OUTPUT_PATH
+from pathlib import Path
+
+from .config import SEED, OUTPUT_PATH
 from .core.base_dataset import BaseDataset
 from .datasets.multiple import MultiPLE
 from .datasets.codenet import CodeNet
@@ -103,13 +105,14 @@ def build_model(args):
 
 def run_setup(dataset: BaseDataset, args):
     if isinstance(dataset, BigCloneBench):
-        dataset.extract_and_serialize()
-        print("[Setup] BigCloneBench extraction completed.")
+        dataset.extract_and_serialize(db_path=cfg.BCB_DB_PATH)
     else:
         for lang in _resolve_languages(dataset, args):
-            dataset.select_queries(lang, seed=SEED)
-            print(f"[Setup] Queries selected for {lang}.")
-            
+            if args.queries_from_file:
+                dataset.select_queries_from_file(lang, Path(args.queries_from_file))
+            else:
+                dataset.select_queries(lang, seed=cfg.SEED)
+
 def run_transform(dataset: BaseDataset, args):
     from .transformers.transformer_factory import build_transformer
     if args.version is None:
@@ -239,6 +242,12 @@ def parse_args():
         choices=["timing"],
         required=False
     )
+    parser.add_argument(
+        "--queries_from_file",
+        required=False,
+        help="Path a un file JSON contenente gli id delle query da selezionare."
+)
+    
 
     args = parser.parse_args()
     if args.analysis is None:

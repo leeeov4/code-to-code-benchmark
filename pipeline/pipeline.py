@@ -95,7 +95,6 @@ class Pipeline:
                 ranked = ranked[:self.top_k]
 
             scores[query.id] = ranked
-            break
 
         self._save_pickle(scores, out_path)
         print(f"[Stage 2] Salvati scores per {len(scores)} query → {out_path}")

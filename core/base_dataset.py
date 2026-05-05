@@ -76,6 +76,35 @@ class BaseDataset(ABC):
             f"{self.__class__.__name__} non supporta la selezione casuale delle query."
         )
 
+    # BaseDataset
+
+    def select_queries_from_file(self, language: str, ids_path: Path):
+        """Seleziona le query leggendo gli id da un file JSON.
+        Alternativa a select_queries per esperimenti riproducibili con id fissi."""
+        
+        path = self._queries_path(language, version="original")
+        if path.exists():
+            raise FileExistsError(
+                f"Query già selezionate per {language}. "
+                f"Cancella {path} per rigenerare."
+            )
+
+        with open(ids_path, "r") as f:
+            ids = set(json.load(f))
+
+        candidates = self._load_original_candidates(language)
+        queries = [c for c in candidates if c.id in ids]
+
+        missing = ids - {q.id for q in queries}
+        
+        if missing:
+            raise ValueError(
+                f"I seguenti id non sono stati trovati tra i candidati: {missing}"
+            )
+
+        self._save_to_file(queries, path)
+        print(f"[Setup] Caricate {len(queries)} query da file per {language}.")
+
     # ------------------------------------------------------------------ #
     #  Structural properties                                             #
     # ------------------------------------------------------------------ #

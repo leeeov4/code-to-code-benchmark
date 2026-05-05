@@ -36,7 +36,7 @@ class StarEncoder(BaseModel):
     def encode(self, code: str, is_query: bool = False) -> torch.Tensor:
         return self.encode_batch([code])[0]
 
-    def encode_batch(self, codes: list[str], batch_size: int = 32, is_query: bool = False) -> list[torch.Tensor]:
+    def encode_batch(self, codes: list[str], batch_size: int = 2, is_query: bool = False) -> list[torch.Tensor]:
         embeddings = []
 
         for i in tqdm(range(0, len(codes), batch_size)):
